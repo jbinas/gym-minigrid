@@ -18,11 +18,18 @@ from vec_env.dummy_vec_env import DummyVecEnv
 from vec_env.subproc_vec_env import SubprocVecEnv
 from envs import make_env
 from kfac import KFACOptimizer
-from model import Policy
+from model import GRUPolicy, LSTMPolicy
 from storage import RolloutStorage
 from visualize import visdom_plot
 
 args = get_args()
+
+assert args.policy in ['lstm', 'gru'], 'incorrect policy specification'
+
+RNNPolicy = {
+        'gru': GRUPolicy,
+        'lstm': LSTMPolicy,
+        }[args.policy]
 
 assert args.algo in ['a2c', 'ppo', 'acktr']
 if args.recurrent_policy:
@@ -55,7 +62,7 @@ def main():
     obs_shape = (obs_shape[0] * args.num_stack, *obs_shape[1:])
     obs_numel = reduce(operator.mul, obs_shape, 1)
 
-    actor_critic = Policy(obs_numel, envs.action_space)
+    actor_critic = RNNPolicy(obs_numel, envs.action_space)
 
     # Maxime: log some info about the model and its size
     modelSize = 0
